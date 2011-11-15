@@ -217,7 +217,7 @@ func (g *GoHub) PullRequest(user, repo string, id int) (*PullRequest, os.Error) 
 	return &pr, nil
 }
 
-func (g *GoHub) PullRequests(user, repo string) ([]PullRequests, os.Error) {
+func (g *GoHub) PullRequests(user, repo string) ([]*PullRequests, os.Error) {
 	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls", g.apiHost, user, repo)
 	out, err := g.makeGetRequest(url_)
 
@@ -225,7 +225,7 @@ func (g *GoHub) PullRequests(user, repo string) ([]PullRequests, os.Error) {
 		return nil, err
 	}
 
-	var prs []PullRequests
+	var prs []*PullRequests
 	err = json.Unmarshal(out, &prs)
 	if err != nil {
 		return nil, err
