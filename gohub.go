@@ -239,7 +239,7 @@ func (g *GoHub) PullRequests(user, repo string) ([]*PullRequests, os.Error) {
 }
 
 func (p *PullRequest) Merge() (*PullRequestMergeResponse, os.Error) {
-	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/merge", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/merge", p.g.apiHost, p.Base.Repo.Owner.Login, p.Base.Repo.Name, p.Number)
 	out, err := p.g.makePutRequest(url_)
 
 	if err != nil {
@@ -260,7 +260,7 @@ func (p *PullRequest) Merge() (*PullRequestMergeResponse, os.Error) {
 }
 
 func (p *PullRequest) Comments() ([]Comment, os.Error) {
-	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/comments", p.g.apiHost, p.Base.Repo.Owner.Login, p.Base.Repo.Name, p.Number)
 	out, err := p.g.makeGetRequest(url_)
 
 	if err != nil {
@@ -277,7 +277,7 @@ func (p *PullRequest) Comments() ([]Comment, os.Error) {
 }
 
 func (p *PullRequest) IssueComments() ([]Comment, os.Error) {
-	url_ := fmt.Sprintf("%v/repos/%v/%v/issues/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	url_ := fmt.Sprintf("%v/repos/%v/%v/issues/%v/comments", p.g.apiHost, p.Base.Repo.Owner.Login, p.Base.Repo.Name, p.Number)
 	out, err := p.g.makeGetRequest(url_)
 
 	if err != nil {
