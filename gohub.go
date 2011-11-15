@@ -7,6 +7,7 @@ import (
 	"http"
 	"time"
 	"os"
+	"url"
 )
 
 const GH_API_ROOT = "https://api.github.com"
@@ -178,6 +179,26 @@ func (g *GoHub) makePutRequest(url_ string) ([]byte, os.Error) {
 	return outbuf, err
 }
 
+func (g *GoHub) makePostRequest(url_ string, params url.Values) ([]byte, os.Error) {
+	req, err := g.makeAuthRequest("POST", url_)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Form = params
+	resp, err := g.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	outbuf, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return outbuf, err
+}
+
 func (g *GoHub) PullRequest(user, repo string, id int) (*PullRequest, os.Error) {
 	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v", g.apiHost, user, repo, id)
 	out, err := g.makeGetRequest(url_)
@@ -270,6 +291,24 @@ func (p *PullRequest) IssueComments() ([]Comment, os.Error) {
 	}
 
 	return comments, nil
+}
+
+func (p *PullRequest) NewIssueComment(body string) (*Comment, os.Error) {
+	url_ := fmt.Sprintf("%v/repos/%v/%v/issues/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	params := url.Values{}
+	params.Add("body", body)
+	out, err := p.g.makePostRequest(url_, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var comment Comment
+	err = json.Unmarshal(out, &comment)
+	if err != nil {
+		return nil, err
+	}
+
+	return &comment, nil
 }
 
 func (ts *Timestamp) UnmarshalJSON(data []byte) os.Error {
