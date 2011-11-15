@@ -104,6 +104,12 @@ type User struct {
 	Url       string `json:"url"`
 }
 
+type PullRequestMergeResponse struct {
+	Sha	NullableString `json:"sha"`
+	Merged  bool	`json:"merged"`
+	Message string `json:"message"`
+}
+
 func New(user, password, api_root string) *GoHub {
 	if api_root == "" {
 		return &GoHub{user, password, &http.Client{}, GH_API_ROOT}
@@ -177,6 +183,7 @@ func (g *GoHub) PullRequest(user, repo string, id int) (*PullRequest, os.Error) 
 		return nil, err
 	}
 
+	pr.g = g
 	return &pr, nil
 }
 
@@ -194,7 +201,32 @@ func (g *GoHub) PullRequests(user, repo string) ([]PullRequests, os.Error) {
 		return nil, err
 	}
 
+	for _, v := range prs {
+		v.g = g
+	}
+
 	return prs, nil
+}
+
+func (p *PullRequest) Merge() (*PullRequestMergeResponse, os.Error) {
+	url := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/merge", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	out, err := p.g.makePutRequest(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var pullRequestMergeResponse PullRequestMergeResponse
+	err = json.Unmarshal(out, &pullRequestMergeResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	if !pullRequestMergeResponse.Merged {
+		return nil, os.NewError(pullRequestMergeResponse.Message)
+	}
+
+	return &pullRequestMergeResponse, nil
 }
 
 func (ts *Timestamp) UnmarshalJSON(data []byte) os.Error {

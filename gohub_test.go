@@ -38,3 +38,39 @@ func (s *S) TestPullRequest(c *gocheck.C) {
 	c.Assert(req.Method, gocheck.Equals, "GET")
 	c.Assert(resp.Number, gocheck.Equals, 29)
 }
+
+func (s *S) TestMergeOK(c *gocheck.C) {
+	testServer.FlushRequests()
+	testServer.PrepareResponse(200, nil, TestPullRequestOK)
+	resp, err := s.g.PullRequest("foo", "bar", 29)
+
+	req := testServer.WaitRequest()
+
+	testServer.PrepareResponse(200, nil, TestMergeSuccessOK)
+	mr, err := resp.Merge()
+	req = testServer.WaitRequest()
+
+	c.Assert(err, gocheck.IsNil)
+	c.Assert(req.Method, gocheck.Equals, "PUT")
+
+	c.Assert(mr.Sha, gocheck.Equals, gohub.NullableString("6dcb09b5b57875f334f61aebed695e2e4193db5e"))
+	c.Assert(mr.Merged, gocheck.Equals, true)
+	c.Assert(mr.Message, gocheck.Equals, "PullRequestsuccessfullymerged")
+}
+
+func (s *S) TestMergeFail(c *gocheck.C) {
+	testServer.FlushRequests()
+	testServer.PrepareResponse(200, nil, TestPullRequestOK)
+	resp, err := s.g.PullRequest("foo", "bar", 29)
+
+	req := testServer.WaitRequest()
+
+	testServer.PrepareResponse(200, nil, TestMergeFailureOK)
+	mr, err := resp.Merge()
+	req = testServer.WaitRequest()
+
+	c.Assert(err, gocheck.Not(gocheck.IsNil))
+	c.Assert(req.Method, gocheck.Equals, "PUT")
+
+	c.Assert(mr, gocheck.IsNil)
+}
