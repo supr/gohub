@@ -31,7 +31,7 @@ func (s *S) TestPullRequests(c *gocheck.C) {
 func (s *S) TestPullRequest(c *gocheck.C) {
 	testServer.PrepareResponse(200, nil, TestPullRequestOK)
 
-	resp, err := s.g.PullRequest("foo", "bar" , 29)
+	resp, err := s.g.PullRequest("foo", "bar", 29)
 	req := testServer.WaitRequest()
 
 	c.Assert(err, gocheck.IsNil)
@@ -73,4 +73,41 @@ func (s *S) TestMergeFail(c *gocheck.C) {
 	c.Assert(req.Method, gocheck.Equals, "PUT")
 
 	c.Assert(mr, gocheck.IsNil)
+}
+
+func (s *S) TestCommentsOK(c *gocheck.C) {
+	testServer.FlushRequests()
+	testServer.PrepareResponse(200, nil, TestPullRequestOK)
+	resp, err := s.g.PullRequest("foo", "bar", 29)
+
+	req := testServer.WaitRequest()
+
+	testServer.PrepareResponse(200, nil, TestCommentsOK)
+	cmts, err := resp.Comments()
+	req = testServer.WaitRequest()
+
+	c.Assert(req.Method, gocheck.Equals, "GET")
+	c.Assert(err, gocheck.IsNil)
+	c.Assert(len(cmts), gocheck.Not(gocheck.Equals), 0)
+
+	c.Assert(cmts[0].Body, gocheck.Equals, "+1")
+}
+
+func (s *S) TestIssueCommentsOK(c *gocheck.C) {
+	testServer.FlushRequests()
+	testServer.PrepareResponse(200, nil, TestPullRequestOK)
+	resp, err := s.g.PullRequest("foo", "bar", 29)
+
+	req := testServer.WaitRequest()
+
+	testServer.PrepareResponse(200, nil, TestCommentsOK)
+	cmts, err := resp.Comments()
+	req = testServer.WaitRequest()
+
+	c.Assert(req.Method, gocheck.Equals, "GET")
+	c.Assert(err, gocheck.IsNil)
+	c.Assert(len(cmts), gocheck.Not(gocheck.Equals), 0)
+
+	c.Assert(cmts[0].Body, gocheck.Equals, "+1")
+
 }

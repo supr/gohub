@@ -105,9 +105,18 @@ type User struct {
 }
 
 type PullRequestMergeResponse struct {
-	Sha	NullableString `json:"sha"`
-	Merged  bool	`json:"merged"`
-	Message string `json:"message"`
+	Sha     NullableString `json:"sha"`
+	Merged  bool           `json:"merged"`
+	Message string         `json:"message"`
+}
+
+type Comment struct {
+	CreatedAt Timestamp `json:"created_at"`
+	UpdatedAt Timestamp `json:"updated_at"`
+	User      User      `json:"user"`
+	CommitId  string    `json:"commit_id"`
+	Position  int       `json:"position"`
+	Body      string    `json:"body"`
 }
 
 func New(user, password, api_root string) *GoHub {
@@ -227,6 +236,40 @@ func (p *PullRequest) Merge() (*PullRequestMergeResponse, os.Error) {
 	}
 
 	return &pullRequestMergeResponse, nil
+}
+
+func (p *PullRequest) Comments() ([]Comment, os.Error) {
+	url := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	out, err := p.g.makeGetRequest(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var comments []Comment
+	err = json.Unmarshal(out, &comments)
+	if err != nil {
+		return nil, err
+	}
+
+	return comments, nil
+}
+
+func (p *PullRequest) IssueComments() ([]Comment, os.Error) {
+	url := fmt.Sprintf("%v/repos/%v/%v/issues/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	out, err := p.g.makeGetRequest(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var comments []Comment
+	err = json.Unmarshal(out, &comments)
+	if err != nil {
+		return nil, err
+	}
+
+	return comments, nil
 }
 
 func (ts *Timestamp) UnmarshalJSON(data []byte) os.Error {

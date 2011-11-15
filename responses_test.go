@@ -12,3 +12,7 @@ const TestMergeSuccessOK = `
 const TestMergeFailureOK = `
 {"sha":null,"merged":false,"message":"failure"}
 `
+
+const TestCommentsOK = `
+[{"updated_at":"2011-10-18T13:36:48Z","user":{"avatar_url":"https://secure.gravatar.com/avatar/b2ebc1aa12b24ade90b519c1ac059b63?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-140.png","login":"tillsc","url":"https://api.github.com/users/tillsc","gravatar_id":"b2ebc1aa12b24ade90b519c1ac059b63","id":311544},"url":"https://api.github.com/repos/rails/rails/issues/comments/2441740","created_at":"2011-10-18T13:36:48Z","body":"+1","id":2441740}]
+`
