@@ -127,9 +127,9 @@ func New(user, password, api_root string) *GoHub {
 	return &GoHub{user, password, &http.Client{}, api_root}
 }
 
-func (g *GoHub) makeAuthRequest(method, url string) (*http.Request, os.Error) {
+func (g *GoHub) makeAuthRequest(method, url_ string) (*http.Request, os.Error) {
 
-	req, err := http.NewRequest(method, url, nil)
+	req, err := http.NewRequest(method, url_, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +141,8 @@ func (g *GoHub) makeAuthRequest(method, url string) (*http.Request, os.Error) {
 	return req, nil
 }
 
-func (g *GoHub) makeGetRequest(url string) ([]byte, os.Error) {
-	req, err := g.makeAuthRequest("GET", url)
+func (g *GoHub) makeGetRequest(url_ string) ([]byte, os.Error) {
+	req, err := g.makeAuthRequest("GET", url_)
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +159,8 @@ func (g *GoHub) makeGetRequest(url string) ([]byte, os.Error) {
 	return outbuf, err
 }
 
-func (g *GoHub) makePutRequest(url string) ([]byte, os.Error) {
-	req, err := g.makeAuthRequest("PUT", url)
+func (g *GoHub) makePutRequest(url_ string) ([]byte, os.Error) {
+	req, err := g.makeAuthRequest("PUT", url_)
 	if err != nil {
 		return nil, err
 	}
@@ -179,8 +179,8 @@ func (g *GoHub) makePutRequest(url string) ([]byte, os.Error) {
 }
 
 func (g *GoHub) PullRequest(user, repo string, id int) (*PullRequest, os.Error) {
-	url := fmt.Sprintf("%v/repos/%v/%v/pulls/%v", g.apiHost, user, repo, id)
-	out, err := g.makeGetRequest(url)
+	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v", g.apiHost, user, repo, id)
+	out, err := g.makeGetRequest(url_)
 
 	if err != nil {
 		return nil, err
@@ -197,8 +197,8 @@ func (g *GoHub) PullRequest(user, repo string, id int) (*PullRequest, os.Error) 
 }
 
 func (g *GoHub) PullRequests(user, repo string) ([]PullRequests, os.Error) {
-	url := fmt.Sprintf("%v/repos/%v/%v/pulls", g.apiHost, user, repo)
-	out, err := g.makeGetRequest(url)
+	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls", g.apiHost, user, repo)
+	out, err := g.makeGetRequest(url_)
 
 	if err != nil {
 		return nil, err
@@ -218,8 +218,8 @@ func (g *GoHub) PullRequests(user, repo string) ([]PullRequests, os.Error) {
 }
 
 func (p *PullRequest) Merge() (*PullRequestMergeResponse, os.Error) {
-	url := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/merge", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
-	out, err := p.g.makePutRequest(url)
+	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/merge", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	out, err := p.g.makePutRequest(url_)
 
 	if err != nil {
 		return nil, err
@@ -239,8 +239,8 @@ func (p *PullRequest) Merge() (*PullRequestMergeResponse, os.Error) {
 }
 
 func (p *PullRequest) Comments() ([]Comment, os.Error) {
-	url := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
-	out, err := p.g.makeGetRequest(url)
+	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	out, err := p.g.makeGetRequest(url_)
 
 	if err != nil {
 		return nil, err
@@ -256,8 +256,8 @@ func (p *PullRequest) Comments() ([]Comment, os.Error) {
 }
 
 func (p *PullRequest) IssueComments() ([]Comment, os.Error) {
-	url := fmt.Sprintf("%v/repos/%v/%v/issues/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
-	out, err := p.g.makeGetRequest(url)
+	url_ := fmt.Sprintf("%v/repos/%v/%v/issues/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
+	out, err := p.g.makeGetRequest(url_)
 
 	if err != nil {
 		return nil, err
