@@ -3,6 +3,7 @@ include $(GOROOT)/src/Make.inc
 TARG=gohub
 GOFILES=\
 		gohub.go\
+		user.go\
 
 include $(GOROOT)/src/Make.pkg
 

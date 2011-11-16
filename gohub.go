@@ -3,11 +3,13 @@ package gohub
 import (
 	"json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"http"
 	"time"
 	"os"
 	"url"
+	"strings"
 )
 
 const GH_API_ROOT = "https://api.github.com"
@@ -120,6 +122,10 @@ type Comment struct {
 	Body      string    `json:"body"`
 }
 
+type MergeMessage struct {
+	CommitMessage string `json:"commit_message"`
+}
+
 func New(user, password, api_root string) *GoHub {
 	if api_root == "" {
 		return &GoHub{user, password, &http.Client{}, GH_API_ROOT}
@@ -128,9 +134,9 @@ func New(user, password, api_root string) *GoHub {
 	return &GoHub{user, password, &http.Client{}, api_root}
 }
 
-func (g *GoHub) makeAuthRequest(method, url_ string) (*http.Request, os.Error) {
+func (g *GoHub) makeAuthRequest(method, url_ string, body io.Reader) (*http.Request, os.Error) {
 
-	req, err := http.NewRequest(method, url_, nil)
+	req, err := http.NewRequest(method, url_, body)
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +148,8 @@ func (g *GoHub) makeAuthRequest(method, url_ string) (*http.Request, os.Error) {
 	return req, nil
 }
 
-func (g *GoHub) makeGetRequest(url_ string) ([]byte, os.Error) {
-	req, err := g.makeAuthRequest("GET", url_)
+func (g *GoHub) makeGetRequest(url_ string, params url.Values) ([]byte, os.Error) {
+	req, err := g.makeAuthRequest("GET", url_, strings.NewReader(params.Encode()))
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +166,8 @@ func (g *GoHub) makeGetRequest(url_ string) ([]byte, os.Error) {
 	return outbuf, err
 }
 
-func (g *GoHub) makePutRequest(url_ string) ([]byte, os.Error) {
-	req, err := g.makeAuthRequest("PUT", url_)
+func (g *GoHub) makePutRequest(url_ string, body io.Reader) ([]byte, os.Error) {
+	req, err := g.makeAuthRequest("PUT", url_, body)
 	if err != nil {
 		return nil, err
 	}
@@ -179,13 +185,12 @@ func (g *GoHub) makePutRequest(url_ string) ([]byte, os.Error) {
 	return outbuf, err
 }
 
-func (g *GoHub) makePostRequest(url_ string, params url.Values) ([]byte, os.Error) {
-	req, err := g.makeAuthRequest("POST", url_)
+func (g *GoHub) makePostRequest(url_ string, body io.Reader) ([]byte, os.Error) {
+	req, err := g.makeAuthRequest("POST", url_, body)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Form = params
 	resp, err := g.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -201,7 +206,7 @@ func (g *GoHub) makePostRequest(url_ string, params url.Values) ([]byte, os.Erro
 
 func (g *GoHub) PullRequest(user, repo string, id int) (*PullRequest, os.Error) {
 	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v", g.apiHost, user, repo, id)
-	out, err := g.makeGetRequest(url_)
+	out, err := g.makeGetRequest(url_, nil)
 
 	if err != nil {
 		return nil, err
@@ -219,7 +224,7 @@ func (g *GoHub) PullRequest(user, repo string, id int) (*PullRequest, os.Error) 
 
 func (g *GoHub) PullRequests(user, repo string) ([]*PullRequests, os.Error) {
 	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls", g.apiHost, user, repo)
-	out, err := g.makeGetRequest(url_)
+	out, err := g.makeGetRequest(url_, nil)
 
 	if err != nil {
 		return nil, err
@@ -238,9 +243,11 @@ func (g *GoHub) PullRequests(user, repo string) ([]*PullRequests, os.Error) {
 	return prs, nil
 }
 
-func (p *PullRequest) Merge() (*PullRequestMergeResponse, os.Error) {
+func (p *PullRequest) Merge(commit_message string) (*PullRequestMergeResponse, os.Error) {
 	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/merge", p.g.apiHost, p.Base.Repo.Owner.Login, p.Base.Repo.Name, p.Number)
-	out, err := p.g.makePutRequest(url_)
+	z := MergeMessage{commit_message}
+	buf, _ := json.Marshal(z)
+	out, err := p.g.makePutRequest(url_, strings.NewReader(string(buf)))
 
 	if err != nil {
 		return nil, err
@@ -261,7 +268,7 @@ func (p *PullRequest) Merge() (*PullRequestMergeResponse, os.Error) {
 
 func (p *PullRequest) Comments() ([]Comment, os.Error) {
 	url_ := fmt.Sprintf("%v/repos/%v/%v/pulls/%v/comments", p.g.apiHost, p.Base.Repo.Owner.Login, p.Base.Repo.Name, p.Number)
-	out, err := p.g.makeGetRequest(url_)
+	out, err := p.g.makeGetRequest(url_, nil)
 
 	if err != nil {
 		return nil, err
@@ -278,7 +285,7 @@ func (p *PullRequest) Comments() ([]Comment, os.Error) {
 
 func (p *PullRequest) IssueComments() ([]Comment, os.Error) {
 	url_ := fmt.Sprintf("%v/repos/%v/%v/issues/%v/comments", p.g.apiHost, p.Base.Repo.Owner.Login, p.Base.Repo.Name, p.Number)
-	out, err := p.g.makeGetRequest(url_)
+	out, err := p.g.makeGetRequest(url_, nil)
 
 	if err != nil {
 		return nil, err
@@ -297,7 +304,7 @@ func (p *PullRequest) NewIssueComment(body string) (*Comment, os.Error) {
 	url_ := fmt.Sprintf("%v/repos/%v/%v/issues/%v/comments", p.g.apiHost, p.Head.Repo.Name, p.Head.Repo.Owner.Login, p.Number)
 	params := url.Values{}
 	params.Add("body", body)
-	out, err := p.g.makePostRequest(url_, params)
+	out, err := p.g.makePostRequest(url_, strings.NewReader(params.Encode()))
 	if err != nil {
 		return nil, err
 	}

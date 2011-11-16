@@ -47,7 +47,7 @@ func (s *S) TestMergeOK(c *gocheck.C) {
 	req := testServer.WaitRequest()
 
 	testServer.PrepareResponse(200, nil, TestMergeSuccessOK)
-	mr, err := resp.Merge()
+	mr, err := resp.Merge("FOO")
 	req = testServer.WaitRequest()
 
 	c.Assert(err, gocheck.IsNil)
@@ -66,7 +66,7 @@ func (s *S) TestMergeFail(c *gocheck.C) {
 	req := testServer.WaitRequest()
 
 	testServer.PrepareResponse(200, nil, TestMergeFailureOK)
-	mr, err := resp.Merge()
+	mr, err := resp.Merge("FOO")
 	req = testServer.WaitRequest()
 
 	c.Assert(err, gocheck.Not(gocheck.IsNil))
