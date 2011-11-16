@@ -52,21 +52,23 @@ type PullRequests struct {
 }
 
 type PullRequest struct {
-	Url       NullableString    `json:"url"`
-	HtmlUrl   NullableString    `json:"html_url"`
-	DiffUrl   NullableString    `json:"diff_url"`
-	PatchUrl  NullableString    `json:"patch_url"`
-	IssueUrl  NullableString    `json:"issue_url"`
-	Number    int               `json:"number"`
-	State     NullableString    `json:"state"`
-	Title     NullableString    `json:"title"`
-	Body      NullableString    `json:"body"`
-	CreatedAt Timestamp         `json:"created_at"`
-	UpdatedAt Timestamp         `json:"updated_at"`
-	Head      PullRequestMarker `json:"head"`
-	Base      PullRequestMarker `json:"base"`
-	Links     Links             `json:"_links"`
-	g         *GoHub
+	Url         NullableString    `json:"url"`
+	HtmlUrl     NullableString    `json:"html_url"`
+	DiffUrl     NullableString    `json:"diff_url"`
+	PatchUrl    NullableString    `json:"patch_url"`
+	IssueUrl    NullableString    `json:"issue_url"`
+	Number      int               `json:"number"`
+	State       NullableString    `json:"state"`
+	Title       NullableString    `json:"title"`
+	Body        NullableString    `json:"body"`
+	CreatedAt   Timestamp         `json:"created_at"`
+	UpdatedAt   Timestamp         `json:"updated_at"`
+	Merged      bool              `json:"merged"`
+	IsMergeable bool              `json:"mergeable"`
+	Head        PullRequestMarker `json:"head"`
+	Base        PullRequestMarker `json:"base"`
+	Links       Links             `json:"_links"`
+	g           *GoHub
 }
 
 type PullRequestMarker struct {
@@ -137,6 +139,7 @@ func New(user, password, api_root string) *GoHub {
 func (g *GoHub) makeAuthRequest(method, url_ string, body io.Reader) (*http.Request, os.Error) {
 
 	req, err := http.NewRequest(method, url_, body)
+	req.Header.Set("User-Agent", "GoHub http://github.com/supr/gohub")
 	if err != nil {
 		return nil, err
 	}
